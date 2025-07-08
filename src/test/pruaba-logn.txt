@@ -1,0 +1,46 @@
+
+package com.dailin.backend.users_app.backend_usersapp.services;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.stereotype.Service;
+
+@Service
+public class JpaUserDetailsService implements UserDetailsService{
+
+    // implementaremos nuestra clase de login
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+
+        // como prueba - si no es el admin 
+        if(!username.equals("admin")){
+            
+            throw new UsernameNotFoundException("Username "+username+" no existe en el sistema"); // lanzamos una excepcion
+        }
+
+        // si sí es el administrador - lo autenticamos con el filtro de autenticacion
+
+        // creamos un listado de roles
+        List<GrantedAuthority> authorities = new ArrayList<>();
+        
+        // todos los roles en spring security se inician con el prejifo "ROLE_"
+        authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
+
+        // User de spring security - datos de prueba(username, password, habilitado, cuenta_no_expire, credenciales_no_expiren, no_bloqueada, roles)
+        return new User(username, 
+                "$2a$10$DOMDxjYyfZ/e7RcBfUpzqeaCs8pLgcizuiQWXPkU35nOhZlFcE9MS", 
+                true, 
+                true, 
+                true, 
+                true, 
+                authorities);
+    }
+
+}
