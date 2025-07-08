@@ -3,12 +3,15 @@ package com.dailin.backend.users_app.backend_usersapp.services;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.dailin.backend.users_app.backend_usersapp.auth.models.dto.UserDto;
+import com.dailin.backend.users_app.backend_usersapp.auth.models.dto.mapper.DtoMapperUser;
 import com.dailin.backend.users_app.backend_usersapp.models.entities.Role;
 import com.dailin.backend.users_app.backend_usersapp.models.entities.User;
 import com.dailin.backend.users_app.backend_usersapp.repositories.RoleRepository;
@@ -28,16 +31,25 @@ public class UserServiceImpl implements UserService{
 
     @Override
     @Transactional(readOnly = true)
-    public List<User> findAll() {
+    public List<UserDto> findAll() {
         
-        return (List<User>) repository.findAll();
+        List<User> users = (List<User>) repository.findAll();
+        return users.stream()
+                .map(u -> DtoMapperUser.builder().setUser(u).build())
+                .collect(Collectors.toList());
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<User> findById(Long id) {
+    public Optional<UserDto> findById(Long id) {
     
-        return repository.findById(id);
+        Optional<User> o = repository.findById(id);
+        if(o.isPresent()) {
+            return Optional.of(
+                DtoMapperUser.builder().setUser(o.orElseThrow()).build()
+            );
+        }
+        return Optional.empty();
     }
 
     @Override
@@ -49,10 +61,11 @@ public class UserServiceImpl implements UserService{
 
     @Override
     @Transactional
-    public Optional<User> update(User user, Long id) {
+    public Optional<UserDto> update(User user, Long id) {
 
-        Optional<User> userOp = this.findById(id);
+        Optional<User> userOp = repository.findById(id);
         // otra forma: userOptional = null;
+        User userOptional = null;
 
         if(userOp.isPresent()){
             User userDB = userOp.orElseThrow(); // funciona como un get()
@@ -61,17 +74,17 @@ public class UserServiceImpl implements UserService{
             userDB.setUsername(user.getUsername());
             userDB.setEmail(user.getEmail());
 
-            return Optional.of(this.save(userDB));
-            // userOptional = this.save(userDB);
+            // return Optional.of(this.save(userDB));
+            userOptional = repository.save(userDB);
         }
         
-        // return Optional.ofNullable(userOptional);
-        return Optional.empty();
+        return Optional.ofNullable(DtoMapperUser.builder().setUser(userOptional).build());
+        // return Optional.empty();
     }
 
     @Override
     @Transactional
-    public User save(User user) {
+    public UserDto save(User user) {
         // pasamos la clave de texto plano a encriptarla (la contraseña viene desde el front - cliente)
         String passwordBCrypt = passwordEncoder.encode(user.getPassword());
 
@@ -92,6 +105,6 @@ public class UserServiceImpl implements UserService{
         user.setRoles(roles);
 
         // guardamos el usuario en la base de datos
-        return repository.save(user);
+        return DtoMapperUser.builder().setUser(repository.save(user)).build();
     }
 }

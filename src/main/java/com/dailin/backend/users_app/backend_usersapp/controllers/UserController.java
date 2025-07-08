@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.dailin.backend.users_app.backend_usersapp.auth.models.dto.UserDto;
 import com.dailin.backend.users_app.backend_usersapp.models.entities.User;
 import com.dailin.backend.users_app.backend_usersapp.services.UserService;
 
@@ -32,13 +33,13 @@ public class UserController {
     private UserService service;
 
     @GetMapping
-    public List<User> list(){
+    public List<UserDto> list(){
         return service.findAll();
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<?> show(@PathVariable Long id){
-        Optional<User> userOptional = service.findById(id);
+        Optional<UserDto> userOptional = service.findById(id);
 
         if(userOptional.isPresent()){
             // si el userId está presente devuelve status 200,  con el usuario en el cuerpo de la respuesta
@@ -55,7 +56,7 @@ public class UserController {
             return validation(result);
         }
 
-        User userDB = service.save(user);
+        UserDto userDB = service.save(user);
 
         // status created para que devuelva un 201, y en el cuerpo de la respuesta el usuario JSON
         return ResponseEntity.status(HttpStatus.CREATED).body(userDB);
@@ -67,10 +68,9 @@ public class UserController {
             return validation(result);
         }
 
-        Optional<User> userOp = service.update(user, id);
+        Optional<UserDto> userOp = service.update(user, id);
 
         if(userOp.isPresent()){
-
             return ResponseEntity.status(HttpStatus.CREATED).body(userOp.orElseThrow());
         }
 
@@ -80,7 +80,7 @@ public class UserController {
     @DeleteMapping("/{id}")
     public ResponseEntity<?> remove(@PathVariable Long id){
         
-        Optional<User> userOp = service.findById(id);
+        Optional<UserDto> userOp = service.findById(id);
 
         if(userOp.isPresent()){
             service.remove(id);
