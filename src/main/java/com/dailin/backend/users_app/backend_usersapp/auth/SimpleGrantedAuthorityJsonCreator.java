@@ -6,6 +6,5 @@ public class SimpleGrantedAuthorityJsonCreator {
 
     @JsonCreator
     public SimpleGrantedAuthorityJsonCreator(@JsonProperty("authority") String role){
-        //  this.role = role; 
     }
 }

@@ -38,19 +38,25 @@ public class SpringSecurityConfig {
         jwtAuthenticationFilter.setFilterProcessesUrl("/login"); // Asegúrate de que esta sea la URL a la que envías tu POST de login.
 
         return http.authorizeHttpRequests(authRequest -> {
-                    authRequest
-                            .requestMatchers(HttpMethod.GET, "/users").permitAll() // Ruta pública para listar usuarios
-                            .anyRequest().authenticated(); // Todas las demás rutas requieren autenticación
-                })
-                // Añadimos el filtro de autenticación (login)
-                .addFilter(jwtAuthenticationFilter)
-                // Añadimos el filtro de validación *antes* del filtro estándar de Spring Security
-                // para que se procese el token JWT en cada petición autenticada.
-                // Si el token es válido, establece el contexto de seguridad y permite el acceso.
-                .addFilterBefore(new JwtValidationfilter(authenticationConfiguration.getAuthenticationManager()), UsernamePasswordAuthenticationFilter.class)
-                .csrf(config -> config.disable())
-                .sessionManagement(managment -> managment.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .build();
+            authRequest
+                .requestMatchers(HttpMethod.GET, "/users").permitAll() // Ruta pública para listar usuarios
+                .requestMatchers(HttpMethod.GET, "/users/{id}").hasAnyRole( "ADMIN") // los usuarios que tengan estos roles pueden acceder a la ruta
+                .requestMatchers(HttpMethod.POST, "/users").hasRole("ADMIN") // solo el admin puede crear un usario
+                .requestMatchers("/users/**").hasRole("ADMIN") // solo el admin puede crear un usario
+
+                // .requestMatchers(HttpMethod.DELETE, "/users/{id}").hasRole("ADMIN") // solo el admin puede crear un usario
+                // .requestMatchers(HttpMethod.PUT, "/users/{id}").hasRole("ADMIN") // solo el admin puede crear un usario
+                .anyRequest().authenticated(); // Todas las demás rutas requieren autenticación
+            })
+            // Añadimos el filtro de autenticación (login)
+            .addFilter(jwtAuthenticationFilter)
+            // Añadimos el filtro de validación *antes* del filtro estándar de Spring Security
+            // para que se procese el token JWT en cada petición autenticada.
+            // Si el token es válido, establece el contexto de seguridad y permite el acceso.
+            .addFilterBefore(new JwtValidationfilter(authenticationConfiguration.getAuthenticationManager()), UsernamePasswordAuthenticationFilter.class)
+            .csrf(config -> config.disable())
+            .sessionManagement(managment -> managment.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .build();
     }
 
     @Bean
